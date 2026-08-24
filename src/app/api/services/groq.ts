@@ -21,7 +21,7 @@ export async function generateExecutiveSummary(healthData: CountryHealthData): P
   }
 
   const groq = new Groq({ apiKey });
-  const model = process.env.GROQ_MODEL || "llama-3.1-8b-instant";
+  const model = process.env.GROQ_MODEL || "openai/gpt-oss-20b";
 
   const prompt = `You are an economic intelligence analyst.
 
@@ -44,7 +44,9 @@ Use professional language suitable for an economic intelligence dashboard.
 Data:
 Economy Health Score: ${healthData.overallScore}/100 (${healthData.status})
 Category Scores:
-${healthData.categoryScores.map(c => `${c.categorySlug}: ${c.score}/100`).join("\n")}
+${healthData.categoryScores.map(c => `${c.categorySlug}: ${c.score}/100${c.change ? ` (Change: ${c.change})` : ''}`).join("\n")}
+Top Improving Indicators: ${healthData.historicalScores ? 'Available' : 'N/A'}
+Top Deteriorating Indicators: ${healthData.historicalScores ? 'Available' : 'N/A'}
 `;
 
   try {
@@ -56,24 +58,37 @@ ${healthData.categoryScores.map(c => `${c.categorySlug}: ${c.score}/100`).join("
 
     const content = completion.choices[0]?.message?.content || "";
     
-    // Split by newlines, clean up bullet points if AI included them, filter out empty lines
+    // Split by newlines, filter out empty lines, and clean up standard list markers
+    // (e.g. "1. ", "- ", "• ") without breaking markdown bolding like "**Heading:**"
     const bullets = content
       .split("\n")
-      .map((line: string) => line.replace(/^[-•*0-9.]*\s*/, "").trim())
+      .map((line: string) => {
+        let clean = line.trim();
+        // Remove leading numbered lists like "1. ", "02. ", "1) "
+        clean = clean.replace(/^[0-9]+[.)]\s+/, "");
+        // Remove leading bullets like "- ", "• ", "* " (but NOT "**")
+        clean = clean.replace(/^[-•]\s+/, "");
+        if (clean.startsWith("* ") && !clean.startsWith("**")) {
+          clean = clean.substring(2);
+        }
+        return clean;
+      })
       .filter((line: string) => line.length > 0);
 
     return {
       success: true,
-      summary: bullets.slice(0, 3),
+      summary: bullets,
       model
     };
   } catch (error: any) {
-    console.error("Failed to generate AI summary:", error);
+    console.error("Failed to generate AI summary with model:", model);
     
     // Log additional details if available from Groq SDK
     if (error instanceof Groq.APIError) {
       console.error(`HTTP Status: ${error.status}`);
       console.error(`Error body:`, error.error);
+    } else {
+      console.error(error);
     }
     
     return {

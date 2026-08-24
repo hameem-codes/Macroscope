@@ -1,6 +1,33 @@
 import { useEffect, useState } from "react";
 import GeometricDecoration from "@/components/geometric/GeometricDecoration";
 
+function formatInsightText(text: string) {
+  // Check for Markdown bold (**text**)
+  const mdMatch = text.match(/^\*\*(.*?)\*\*(.*)/);
+  if (mdMatch) {
+    return (
+      <>
+        <strong>{mdMatch[1]}</strong>
+        {mdMatch[2]}
+      </>
+    );
+  }
+
+  // Check for colon separator up to 60 chars
+  const colonIndex = text.indexOf(':');
+  if (colonIndex > 0 && colonIndex < 60) {
+    return (
+      <>
+        <strong>{text.substring(0, colonIndex + 1)}</strong>
+        {text.substring(colonIndex + 1)}
+      </>
+    );
+  }
+
+  // Fallback if no heading format is found
+  return <>{text}</>;
+}
+
 export default function AiSummary({ countryId }: { countryId: string }) {
   const [summary, setSummary] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +59,7 @@ export default function AiSummary({ countryId }: { countryId: string }) {
       <div className="absolute -top-4 -right-4 pointer-events-none">
         <GeometricDecoration variant="dots" color="#F472B6" size={80} />
       </div>
-      <div className="mb-4">
+      <div className="mb-4 shrink-0">
         <h2 className="font-heading font-bold text-lg text-foreground uppercase tracking-wider flex items-center gap-2">
           <span>AI Executive Summary</span>
           <span className="text-[10px] bg-[#F472B6]/20 text-[#F472B6] px-2 py-0.5 rounded uppercase font-bold tracking-widest">
@@ -42,7 +69,7 @@ export default function AiSummary({ countryId }: { countryId: string }) {
         <div className="w-12 h-1 bg-border mt-2" />
       </div>
       
-      <div className="flex-1">
+      <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar relative z-10">
         {loading ? (
           <div className="flex flex-col justify-center h-full">
             <div className="animate-pulse flex flex-col gap-4 w-full mt-4">
@@ -52,11 +79,11 @@ export default function AiSummary({ countryId }: { countryId: string }) {
             </div>
           </div>
         ) : summary.length > 0 ? (
-          <ul className="space-y-4">
+          <ul className="space-y-4 pb-2">
             {summary.map((bullet, idx) => (
               <li key={idx} className="flex gap-3 text-sm text-foreground font-body leading-relaxed">
-                <span className="text-[#8B5CF6] font-bold shrink-0">{(idx + 1).toString().padStart(2, '0')}</span>
-                <span>{bullet}</span>
+                <span className="text-[#8B5CF6] font-bold shrink-0 mt-0.5">{(idx + 1).toString().padStart(2, '0')}</span>
+                <span className="flex-1">{formatInsightText(bullet)}</span>
               </li>
             ))}
           </ul>
@@ -71,6 +98,22 @@ export default function AiSummary({ countryId }: { countryId: string }) {
           </div>
         )}
       </div>
+      
+      <style dangerouslySetInnerHTML={{__html: `
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background-color: #E2E8F0;
+          border-radius: 10px;
+        }
+        .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+          background-color: #CBD5E1;
+        }
+      `}} />
     </div>
   );
 }
