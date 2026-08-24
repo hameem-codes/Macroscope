@@ -52,60 +52,59 @@ export interface WBIndicatorData {
   decimal: number;
 }
 
-export async function getCountryData(countryIso3Code: string) {
-  // Get all WB indicators we mapped
+export async function getRawCountryData(countryIso3Code: string): Promise<WBIndicatorData[]> {
   const wbIndicators = allProviderIndicators.filter(i => i.source === "World Bank");
   const indicatorIds = wbIndicators.map(i => i.sourceIndicatorId).join(";");
   
   try {
-    // Fetch recent data (e.g., last 5 years) to ensure we get the latest non-null value
-    // source=2 is World Development Indicators
     const url = `${WB_API_BASE}/country/${countryIso3Code}/indicator/${indicatorIds}?format=json&source=2&per_page=2000&date=2018:2025`;
-    
     const res = await fetch(url, {
       next: { revalidate: 3600 } // Cache for 1 hour
     });
-    
     const data = await res.json();
     if (!data || data.length < 2) return [];
-
-    const rawData: WBIndicatorData[] = data[1];
-    
-    // Process the data: for each indicator, find the most recent non-null value
-    const processedMap = new Map<string, { current: WBIndicatorData; previous: WBIndicatorData | null }>();
-    
-    // Group by indicator ID
-    const grouped = rawData.reduce((acc, curr) => {
-      if (curr.value !== null) {
-        if (!acc[curr.indicator.id]) acc[curr.indicator.id] = [];
-        acc[curr.indicator.id].push(curr);
-      }
-      return acc;
-    }, {} as Record<string, WBIndicatorData[]>);
-
-    wbIndicators.forEach(mapping => {
-      const observations = grouped[mapping.sourceIndicatorId];
-      if (observations && observations.length > 0) {
-        // Sort by date descending
-        observations.sort((a, b) => parseInt(b.date) - parseInt(a.date));
-        processedMap.set(mapping.id, {
-          current: observations[0],
-          previous: observations.length > 1 ? observations[1] : null
-        });
-      }
-    });
-
-    return Array.from(processedMap.entries()).map(([mappingId, obs]) => {
-      const mapping = wbIndicators.find(m => m.id === mappingId)!;
-      return {
-        mapping,
-        currentObservation: obs.current,
-        previousObservation: obs.previous
-      };
-    });
-
+    return data[1] || [];
   } catch (error) {
-    console.error(`Failed to fetch WB data for ${countryIso3Code}:`, error);
+    console.error(`Failed to fetch raw WB data for ${countryIso3Code}:`, error);
     return [];
   }
 }
+
+export async function getCountryData(countryIso3Code: string) {
+  const rawData = await getRawCountryData(countryIso3Code);
+  const wbIndicators = allProviderIndicators.filter(i => i.source === "World Bank");
+  
+  // Process the data: for each indicator, find the most recent non-null value
+  const processedMap = new Map<string, { current: WBIndicatorData; previous: WBIndicatorData | null }>();
+  
+  // Group by indicator ID
+  const grouped = rawData.reduce((acc, curr) => {
+    if (curr.value !== null) {
+      if (!acc[curr.indicator.id]) acc[curr.indicator.id] = [];
+      acc[curr.indicator.id].push(curr);
+    }
+    return acc;
+  }, {} as Record<string, WBIndicatorData[]>);
+
+  wbIndicators.forEach(mapping => {
+    const observations = grouped[mapping.sourceIndicatorId];
+    if (observations && observations.length > 0) {
+      // Sort by date descending
+      observations.sort((a, b) => parseInt(b.date) - parseInt(a.date));
+      processedMap.set(mapping.id, {
+        current: observations[0],
+        previous: observations.length > 1 ? observations[1] : null
+      });
+    }
+  });
+
+  return Array.from(processedMap.entries()).map(([mappingId, obs]) => {
+    const mapping = wbIndicators.find(m => m.id === mappingId)!;
+    return {
+      mapping,
+      currentObservation: obs.current,
+      previousObservation: obs.previous
+    };
+  });
+}
+

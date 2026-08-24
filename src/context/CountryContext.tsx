@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
 interface CountryContextType {
   countryId: string;
@@ -12,8 +12,24 @@ const CountryContext = createContext<CountryContextType | undefined>(undefined);
 export function CountryProvider({ children }: { children: ReactNode }) {
   const [countryId, setCountryId] = useState("us");
 
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("selectedCountryId");
+      if (saved) {
+        setCountryId(saved);
+      }
+    }
+  }, []);
+
+  const handleSetCountryId = (id: string) => {
+    setCountryId(id);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("selectedCountryId", id);
+    }
+  };
+
   return (
-    <CountryContext.Provider value={{ countryId, setCountryId }}>
+    <CountryContext.Provider value={{ countryId, setCountryId: handleSetCountryId }}>
       {children}
     </CountryContext.Provider>
   );
