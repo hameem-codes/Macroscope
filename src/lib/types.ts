@@ -32,6 +32,9 @@ export interface CountryData {
   name: string;
   flag: string;
   code: string;
+  worldBankCode: string;
+  region: string;
+  g20Member: boolean;
 }
 
 export interface CategoryScore {
