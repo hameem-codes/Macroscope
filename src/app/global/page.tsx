@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useCountry } from "@/context/CountryContext";
 import Shell from "@/components/layout/Shell";
 import GeometricDecoration from "@/components/geometric/GeometricDecoration";
 import { categories } from "@/data/categories";
@@ -10,7 +11,7 @@ import { getIndicatorsForCountry } from "@/data/indicators";
 import { getScoreColor, getScoreRange } from "@/lib/types";
 
 export default function GlobalRankingPage() {
-  const [countryId, setCountryId] = useState("us");
+  const { countryId } = useCountry();
   const [sortBy, setSortBy] = useState<"score-desc" | "score-asc">("score-desc");
 
   // Calculate health data for all countries
@@ -28,7 +29,7 @@ export default function GlobalRankingPage() {
   );
 
   return (
-    <Shell selectedCountry={countryId} onCountryChange={setCountryId}>
+    <Shell>
       {/* Header */}
       <section className="relative mb-8">
         <div className="absolute -top-8 right-10 pointer-events-none hidden lg:block">

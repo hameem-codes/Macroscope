@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { CountryProvider } from "@/context/CountryContext";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -6,7 +7,6 @@ export const metadata: Metadata = {
   description:
     "Sophisticated economic intelligence platform tracking 51 indicators across 8 categories.",
 };
-
 export default function RootLayout({
   children,
 }: {
@@ -14,7 +14,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <CountryProvider>
+          {children}
+        </CountryProvider>
+      </body>
     </html>
   );
 }

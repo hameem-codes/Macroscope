@@ -5,19 +5,22 @@ import Sidebar from "@/components/sidebar/Sidebar";
 import Header from "@/components/header/Header";
 import SearchCommand from "@/components/search/SearchCommand";
 
+import { useCountry } from "@/context/CountryContext";
+import { usePathname } from "next/navigation";
+
 interface ShellProps {
   children: React.ReactNode;
-  selectedCountry: string;
-  onCountryChange: (countryId: string) => void;
 }
 
 export default function Shell({
   children,
-  selectedCountry,
-  onCountryChange,
 }: ShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  
+  const { countryId, setCountryId } = useCountry();
+  const pathname = usePathname();
+  const hideCountrySelector = pathname === "/compare" || pathname === "/global";
 
   // Global keyboard shortcut
   useEffect(() => {
@@ -37,10 +40,11 @@ export default function Shell({
 
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <Header
-          selectedCountry={selectedCountry}
-          onCountryChange={onCountryChange}
+          selectedCountry={countryId}
+          onCountryChange={setCountryId}
           onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
           onSearchOpen={() => setSearchOpen(true)}
+          hideCountrySelector={hideCountrySelector}
         />
 
         <main className="flex-1 overflow-y-auto" role="main">

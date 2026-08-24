@@ -1,0 +1,1 @@
+<w> [webpack.cache.PackFileCacheStrategy] Caching failed for pack: Error: EPERM: operation not permitted, rename 'C:\Users\matee\OneDrive\Desktop\Macroscope\.next\cache\webpack\client-development\4.pack.gz_' -> 'C:\Users\matee\OneDrive\Desktop\Macroscope\.next\cache\webpack\client-development\4.pack.gz'

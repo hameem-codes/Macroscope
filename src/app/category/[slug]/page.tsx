@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useCountry } from "@/context/CountryContext";
 import { useParams } from "next/navigation";
 import Shell from "@/components/layout/Shell";
 import ScoreBadge from "@/components/cards/ScoreBadge";
@@ -13,11 +14,12 @@ import { getCountryById } from "@/data/countries";
 import { getCountryHealthData } from "@/lib/calculations";
 import { getIndicatorsForCountry } from "@/data/indicators";
 import { getScoreColor, getScoreRange } from "@/lib/types";
+import IndicatorDetailModal from "@/components/modals/IndicatorDetailModal";
 
 export default function CategoryDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const [countryId, setCountryId] = useState("us");
+  const { countryId } = useCountry();
   const [filters, setFilters] = useState<FilterState>({
     category: slug,
     scoreRange: "all",
@@ -52,7 +54,7 @@ export default function CategoryDetailPage() {
 
   if (!category) {
     return (
-      <Shell selectedCountry={countryId} onCountryChange={setCountryId}>
+      <Shell>
         <div className="text-center py-20">
           <h1 className="font-heading text-2xl font-bold text-foreground mb-4">Category Not Found</h1>
           <p className="text-muted-foreground font-body">
@@ -64,7 +66,7 @@ export default function CategoryDetailPage() {
   }
 
   return (
-    <Shell selectedCountry={countryId} onCountryChange={setCountryId}>
+    <Shell>
       {/* Category Header */}
       <section className="relative mb-8">
         {/* Decorations */}
@@ -175,97 +177,11 @@ export default function CategoryDetailPage() {
 
       {/* Indicator Detail Modal */}
       {selectedInd && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 search-overlay"
-          onClick={() => setSelectedIndicator(null)}
-        >
-          <div
-            className="bg-white border-2 border-foreground rounded-xl shadow-hard-lg max-w-lg w-full max-h-[85vh] overflow-y-auto p-6"
-            onClick={(e) => e.stopPropagation()}
-            role="dialog"
-            aria-label={`${selectedInd.name} detail`}
-          >
-            {/* Close */}
-            <div className="flex items-center justify-between mb-4">
-              <span
-                className="text-[10px] uppercase tracking-wider font-heading font-bold px-2 py-1 rounded-full border"
-                style={{ borderColor: category.color, color: category.color }}
-              >
-                {category.name}
-              </span>
-              <button
-                onClick={() => setSelectedIndicator(null)}
-                className="p-1.5 hover:bg-muted rounded-lg transition-colors"
-                aria-label="Close"
-              >
-                <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M6.28 5.22a.75.75 0 00-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 101.06 1.06L10 11.06l3.72 3.72a.75.75 0 101.06-1.06L11.06 10l3.72-3.72a.75.75 0 00-1.06-1.06L10 8.94 6.28 5.22z" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Name & Score */}
-            <h3 className="font-heading text-xl font-extrabold text-foreground mb-3">{selectedInd.name}</h3>
-            <div className="flex items-center gap-4 mb-4">
-              <ScoreBadge score={selectedInd.score} size="lg" />
-            </div>
-
-            {/* Values */}
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="bg-muted rounded-lg p-3">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-heading font-bold">Current</p>
-                <p className="font-heading text-lg font-bold text-foreground tabular-nums">
-                  {selectedInd.currentValue}{selectedInd.unit}
-                </p>
-              </div>
-              <div className="bg-muted rounded-lg p-3">
-                <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-heading font-bold">Previous</p>
-                <p className="font-heading text-lg font-bold text-muted-foreground tabular-nums">
-                  {selectedInd.previousValue}{selectedInd.unit}
-                </p>
-              </div>
-            </div>
-
-            {/* Change */}
-            <div className="mb-6">
-              <p className={`text-sm font-body font-medium ${
-                selectedInd.change > 0 ? "text-green-600" : selectedInd.change < 0 ? "text-red-500" : "text-muted-foreground"
-              }`}>
-                Change: {selectedInd.change > 0 ? "+" : ""}{selectedInd.change.toFixed(1)} points
-              </p>
-            </div>
-
-            {/* Mini trend */}
-            <div className="mb-6">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-heading font-bold mb-2">
-                12-Month Score History
-              </p>
-              <div className="bg-muted rounded-lg p-4">
-                <TrendChart
-                  data={months.map((m, i) => ({
-                    month: m,
-                    score: Math.max(0, Math.min(100, Math.round(selectedInd.score - 10 + Math.sin(i * 0.9) * 8 + i * 0.4))),
-                  }))}
-                  color={category.color}
-                  height={140}
-                  label={`${selectedInd.name} score history`}
-                />
-              </div>
-            </div>
-
-            {/* Description */}
-            <div className="mb-4">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-heading font-bold mb-1">Description</p>
-              <p className="text-sm text-muted-foreground font-body">{selectedInd.description}</p>
-            </div>
-
-            {/* Meta */}
-            <div className="flex flex-wrap gap-4 text-xs text-muted-foreground font-body border-t border-border pt-4">
-              <span>Update: {selectedInd.updateFrequency}</span>
-              <span>Source: {selectedInd.source}</span>
-            </div>
-          </div>
-        </div>
+        <IndicatorDetailModal
+          indicator={selectedInd}
+          category={category}
+          onClose={() => setSelectedIndicator(null)}
+        />
       )}
     </Shell>
   );

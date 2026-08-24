@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useCountry } from "@/context/CountryContext";
 import Shell from "@/components/layout/Shell";
 import TrendChart from "@/components/charts/TrendChart";
 import GeometricDecoration from "@/components/geometric/GeometricDecoration";
@@ -11,7 +12,7 @@ import { getIndicatorsForCountry } from "@/data/indicators";
 import { getScoreColor, getScoreRange } from "@/lib/types";
 
 export default function ComparePage() {
-  const [countryId, setCountryId] = useState("us");
+  const { countryId } = useCountry();
   const [selectedCountries, setSelectedCountries] = useState<string[]>(["us", "in", "de", "jp", "gb"]);
 
   const toggleCountry = (id: string) => {
@@ -32,7 +33,7 @@ export default function ComparePage() {
 
 
   return (
-    <Shell selectedCountry={countryId} onCountryChange={setCountryId}>
+    <Shell>
       {/* Header */}
       <section className="relative mb-8">
         <div className="absolute -top-6 right-8 pointer-events-none hidden lg:block">

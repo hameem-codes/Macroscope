@@ -111,13 +111,19 @@ export function getIndicatorsForCountry(countryId: string): Indicator[] {
   return indicatorDefinitions.map((def) => {
     const offset = offsets[def.id] || 0;
     const change = getChange(def.baseScore + offset);
+    
+    // Scale values by 2% per offset point so they vary realistically
+    const multiplier = 1 + (offset * 0.02);
+    const cv = Math.round(def.currentValue * multiplier * 10) / 10;
+    const pv = Math.round(def.previousValue * multiplier * 10) / 10;
+    
     return {
       id: def.id,
       name: def.name,
       categorySlug: def.categorySlug,
       score: clampScore(def.baseScore + offset),
-      currentValue: def.currentValue,
-      previousValue: def.previousValue,
+      currentValue: cv,
+      previousValue: pv,
       change: change,
       trend: change > 0.5 ? "up" : change < -0.5 ? "down" : "flat",
       unit: def.unit,

@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { categories } from "@/data/categories";
-import { countries } from "@/data/countries";
 import { indicatorDefinitions } from "@/data/indicators";
+import { useCountry } from "@/context/CountryContext";
 
 interface SearchCommandProps {
   isOpen: boolean;
@@ -15,6 +15,22 @@ export default function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
   const [query, setQuery] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const { setCountryId } = useCountry();
+  const [countries, setCountries] = useState<{ id: string; name: string; code: string }[]>([]);
+
+  // Fetch supported countries
+  useEffect(() => {
+    async function fetchCountries() {
+      try {
+        const res = await fetch("/api/countries");
+        const data = await res.json();
+        setCountries(data || []);
+      } catch (err) {
+        console.error("Failed to fetch countries", err);
+      }
+    }
+    fetchCountries();
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -25,13 +41,6 @@ export default function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        e.preventDefault();
-        if (isOpen) onClose();
-        else {
-          // Parent handles opening
-        }
-      }
       if (e.key === "Escape" && isOpen) {
         onClose();
       }
@@ -61,7 +70,7 @@ export default function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
           c.code.toLowerCase().includes(q)
       ),
     };
-  }, [query]);
+  }, [query, countries]);
 
   const totalResults =
     results.categories.length +
@@ -76,6 +85,8 @@ export default function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
       const ind = indicatorDefinitions.find((i) => i.id === slug);
       if (ind) router.push(`/category/${ind.categorySlug}`);
     } else if (type === "country") {
+      // slug is iso3 code
+      setCountryId(slug);
       router.push("/");
     }
   }
@@ -165,11 +176,11 @@ export default function SearchCommand({ isOpen, onClose }: SearchCommandProps) {
                       </p>
                       {results.countries.map((country) => (
                         <button
-                          key={country.id}
-                          onClick={() => navigateTo("country", country.id)}
+                          key={country.code}
+                          onClick={() => navigateTo("country", country.code)}
                           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-muted text-left transition-colors"
                         >
-                          <span className="text-lg">{country.flag}</span>
+                          <span className="text-lg">🌍</span>
                           <p className="text-sm font-medium text-foreground">{country.name}</p>
                         </button>
                       ))}

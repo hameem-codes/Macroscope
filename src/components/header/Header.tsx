@@ -8,6 +8,7 @@ interface HeaderProps {
   onCountryChange: (countryId: string) => void;
   onMenuToggle: () => void;
   onSearchOpen: () => void;
+  hideCountrySelector?: boolean;
 }
 
 export default function Header({
@@ -15,6 +16,7 @@ export default function Header({
   onCountryChange,
   onMenuToggle,
   onSearchOpen,
+  hideCountrySelector = false,
 }: HeaderProps) {
   const [countryOpen, setCountryOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -51,7 +53,8 @@ export default function Header({
       </div>
 
       {/* Center: Country selector */}
-      <div className="relative" ref={dropdownRef}>
+      {!hideCountrySelector && (
+        <div className="relative" ref={dropdownRef}>
         <button
           onClick={() => setCountryOpen(!countryOpen)}
           className="flex items-center gap-2 px-3 py-2 border-2 border-foreground rounded-lg hover:bg-muted transition-colors text-sm font-medium"
@@ -94,6 +97,7 @@ export default function Header({
           </div>
         )}
       </div>
+      )}
 
       {/* Right: Search + Status */}
       <div className="flex items-center gap-2">

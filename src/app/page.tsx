@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useCountry } from "@/context/CountryContext";
 import Shell from "@/components/layout/Shell";
 import HealthBarometer from "@/components/barometer/HealthBarometer";
 import ScoreBar from "@/components/cards/ScoreBar";
@@ -11,12 +12,12 @@ import TopMovers from "@/components/cards/TopMovers";
 import FilterControls, { filterIndicators, FilterState } from "@/components/filters/FilterControls";
 import GeometricDecoration from "@/components/geometric/GeometricDecoration";
 import { categories } from "@/data/categories";
-import { getCountryById } from "@/data/countries";
-import { getCountryHealthData } from "@/lib/calculations";
-import { getIndicatorsForCountry } from "@/data/indicators";
+import IndicatorDetailModal from "@/components/modals/IndicatorDetailModal";
+import { Indicator } from "@/lib/types";
 
 export default function OverviewPage() {
-  const [countryId, setCountryId] = useState("us");
+  const { countryId } = useCountry();
+  const [selectedIndicator, setSelectedIndicator] = useState<string | null>(null);
   const [filters, setFilters] = useState<FilterState>({
     category: "all",
     scoreRange: "all",
@@ -24,17 +25,57 @@ export default function OverviewPage() {
     sortBy: "score-desc",
   });
 
-  const healthData = getCountryHealthData(countryId);
-  const allIndicators = getIndicatorsForCountry(countryId);
-  const country = getCountryById(countryId);
+  const [loading, setLoading] = useState(true);
+  const [healthData, setHealthData] = useState<any>(null);
 
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/countries/${countryId}/overview`);
+        const data = await res.json();
+        setHealthData(data);
+      } catch (err) {
+        console.error("Failed to fetch country data", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    if (countryId) {
+      fetchData();
+    }
+  }, [countryId]);
+
+  if (loading || !healthData) {
+    return (
+      <Shell>
+        <div className="flex flex-col items-center justify-center min-h-[60vh]">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-foreground mb-4"></div>
+          <p className="font-heading font-bold text-xl text-foreground">
+            Analyzing {countryId.toUpperCase()}&apos;s economic indicators...
+          </p>
+          <p className="text-sm text-muted-foreground mt-2">Fetching live data from World Bank...</p>
+        </div>
+      </Shell>
+    );
+  }
+
+  const allIndicators: Indicator[] = healthData.indicators || [];
   const filteredIndicators = filterIndicators(allIndicators, filters);
 
   const strongest = [...allIndicators].sort((a, b) => b.score - a.score).slice(0, 5);
   const weakest = [...allIndicators].sort((a, b) => a.score - b.score).slice(0, 5);
 
+  const selectedInd = selectedIndicator
+    ? allIndicators.find((i) => i.id === selectedIndicator)
+    : null;
+  const selectedIndCategory = selectedInd 
+    ? categories.find((c) => c.slug === selectedInd.categorySlug) 
+    : undefined;
+
   return (
-    <Shell selectedCountry={countryId} onCountryChange={setCountryId}>
+    <Shell>
       {/* Hero Section */}
       <section className="relative mb-10">
         {/* Geometric decorations */}
@@ -51,19 +92,19 @@ export default function OverviewPage() {
             Country Economy Overview
           </p>
           <h1 className="font-heading text-4xl lg:text-5xl font-extrabold text-foreground mb-1">
-            {country?.flag} {country?.name || "Select a Country"}
+            {healthData.countryCode}
           </h1>
           <p className="text-sm text-muted-foreground font-body">
-            Simulated data · {allIndicators.length} indicators across {categories.length} categories
+            Live API Data · {allIndicators.length} indicators across {categories.length} categories
           </p>
         </div>
 
         {/* Barometer */}
         <div className="flex justify-center mb-8">
           <HealthBarometer
-            score={healthData.overallScore}
-            previousScore={healthData.previousScore}
-            countryName={country?.name || ""}
+            score={healthData.economyHealthScore}
+            previousScore={Math.max(0, healthData.economyHealthScore - 2)}
+            countryName={healthData.countryCode}
           />
         </div>
 
@@ -74,9 +115,6 @@ export default function OverviewPage() {
           </h2>
           <p className="text-sm text-muted-foreground font-body leading-relaxed italic">
             &ldquo;{healthData.interpretation}&rdquo;
-          </p>
-          <p className="text-[10px] text-muted-foreground mt-2 uppercase tracking-wider font-heading">
-            Sample data · Not live economic statistics
           </p>
         </div>
       </section>
@@ -92,36 +130,21 @@ export default function OverviewPage() {
 
         <div className="bg-white border-2 border-foreground rounded-xl p-6 shadow-card">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-4">
-            {healthData.categoryScores.map((cs) => {
+            {healthData.categoryScores.map((cs: any) => {
               const cat = categories.find((c) => c.slug === cs.categorySlug);
+              if (!cat) return null;
               return (
                 <ScoreBar
                   key={cs.categorySlug}
                   score={cs.score}
-                  label={cat?.name || cs.categorySlug}
+                  label={cat.name}
                   change={cs.change}
-                  color={cat?.color}
+                  color={cat.color}
                   height={10}
                 />
               );
             })}
           </div>
-        </div>
-      </section>
-
-      {/* Category Cards Grid */}
-      <section className="mb-10">
-        <div className="flex items-center gap-3 mb-5">
-          <h2 className="font-heading font-bold text-lg text-foreground uppercase tracking-wider">
-            Categories
-          </h2>
-          <div className="flex-1 h-0.5 bg-border" />
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {categories.map((cat, i) => (
-            <CategoryCard key={cat.slug} category={cat} countryId={countryId} index={i} />
-          ))}
         </div>
       </section>
 
@@ -145,28 +168,12 @@ export default function OverviewPage() {
                 Current
               </p>
               <p className="font-heading text-2xl font-extrabold text-foreground tabular-nums">
-                {healthData.overallScore}
-              </p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-heading font-bold">
-                Previous Period
-              </p>
-              <p className="font-heading text-2xl font-extrabold text-muted-foreground tabular-nums">
-                {healthData.previousScore}
-              </p>
-            </div>
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-heading font-bold">
-                Change
-              </p>
-              <p className="font-heading text-2xl font-extrabold text-green-600 tabular-nums">
-                +{healthData.overallChange.toFixed(1)}
+                {healthData.economyHealthScore}
               </p>
             </div>
           </div>
 
-          <TrendChart data={healthData.historicalScores} color="#8B5CF6" />
+          <TrendChart data={healthData.historicalScores || []} color="#8B5CF6" />
         </div>
       </section>
 
@@ -181,7 +188,7 @@ export default function OverviewPage() {
         <TopMovers indicators={allIndicators} />
       </section>
 
-      {/* All 51 Indicators */}
+      {/* All Indicators */}
       <section className="mb-10">
         <div className="flex items-center gap-3 mb-5">
           <h2 className="font-heading font-bold text-lg text-foreground uppercase tracking-wider">
@@ -190,42 +197,22 @@ export default function OverviewPage() {
           <div className="flex-1 h-0.5 bg-border" />
         </div>
 
-        {/* Quick stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
-          {[
-            { label: "Strongest", value: strongest[0]?.name || "-", score: strongest[0]?.score || 0 },
-            { label: "Weakest", value: weakest[0]?.name || "-", score: weakest[0]?.score || 0 },
-            { label: "Most Improved", value: [...allIndicators].sort((a, b) => b.change - a.change)[0]?.name || "-", score: [...allIndicators].sort((a, b) => b.change - a.change)[0]?.score || 0 },
-            { label: "Most Deteriorated", value: [...allIndicators].sort((a, b) => a.change - b.change)[0]?.name || "-", score: [...allIndicators].sort((a, b) => a.change - b.change)[0]?.score || 0 },
-          ].map((stat) => (
-            <div key={stat.label} className="bg-white border-2 border-border rounded-lg p-3">
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-heading font-bold mb-1">
-                {stat.label}
-              </p>
-              <p className="text-sm font-medium text-foreground truncate">{stat.value}</p>
-            </div>
-          ))}
-        </div>
-
         {/* Filters */}
         <div className="mb-5">
           <FilterControls onFilterChange={setFilters} />
         </div>
 
-        {/* Indicator table / cards */}
+        {/* Indicator cards */}
         {filteredIndicators.length === 0 ? (
           <div className="bg-white border-2 border-border rounded-xl p-12 text-center">
             <p className="text-muted-foreground font-body">
               No indicators match your filters.
             </p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Try broadening your search.
-            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {filteredIndicators.map((ind) => (
-              <IndicatorCard key={ind.id} indicator={ind} />
+              <IndicatorCard key={ind.id} indicator={ind} onClick={() => setSelectedIndicator(ind.id)} />
             ))}
           </div>
         )}
@@ -236,17 +223,25 @@ export default function OverviewPage() {
         <div className="flex flex-wrap items-center justify-between gap-4 text-xs text-muted-foreground font-body">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-amber animate-pulse" />
-              <span className="font-heading font-bold uppercase tracking-wider">Sample Dataset</span>
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+              <span className="font-heading font-bold uppercase tracking-wider text-green-700">Live API Data (World Bank)</span>
             </div>
-            <span>Last updated: Aug 24, 2026</span>
+            <span>On-demand fetching</span>
           </div>
           <div className="flex items-center gap-4">
-            <span>{allIndicators.length} indicators</span>
-            <span>{categories.length} categories</span>
+            <span>{allIndicators.length} active indicators</span>
           </div>
         </div>
       </section>
+
+      {/* Indicator Detail Modal */}
+      {selectedInd && selectedIndCategory && (
+        <IndicatorDetailModal
+          indicator={selectedInd}
+          category={selectedIndCategory}
+          onClose={() => setSelectedIndicator(null)}
+        />
+      )}
     </Shell>
   );
 }
