@@ -64,7 +64,7 @@ export default function AiSummary({ countryId }: { countryId: string }) {
   }, [countryId]);
 
   return (
-    <div className="flex flex-col h-full">
+    <div>
       {/* Section header — matches Trend Chart header */}
       <div className="flex items-center gap-3 mb-5">
         <h2 className="font-heading font-bold text-lg text-foreground uppercase tracking-wider">
@@ -77,14 +77,14 @@ export default function AiSummary({ countryId }: { countryId: string }) {
       </div>
 
       {/* Card */}
-      <div className="bg-white border-2 border-foreground rounded-xl p-6 shadow-card relative overflow-hidden flex-1 flex flex-col min-h-0">
+      <div className="bg-white border-2 border-foreground rounded-xl p-6 shadow-card relative overflow-hidden">
         {/* Decoration */}
         <div className="absolute -top-4 -right-4 pointer-events-none">
           <GeometricDecoration variant="dots" color="#F472B6" size={80} />
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar relative z-10">
+        <div className="overflow-y-auto max-h-72 pr-1 custom-scrollbar relative z-10">
           {loading ? (
             <div className="animate-pulse flex flex-col gap-4 pt-2">
               {[...Array(5)].map((_, i) => (
