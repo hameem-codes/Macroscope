@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import GeometricDecoration from "@/components/geometric/GeometricDecoration";
 
@@ -7,26 +9,33 @@ function formatInsightText(text: string) {
   if (mdMatch) {
     return (
       <>
-        <strong>{mdMatch[1]}</strong>
-        {mdMatch[2]}
+        <strong className="text-foreground">{mdMatch[1]}</strong>
+        <span className="text-muted-foreground">{mdMatch[2]}</span>
       </>
     );
   }
 
   // Check for colon separator up to 60 chars
-  const colonIndex = text.indexOf(':');
+  const colonIndex = text.indexOf(":");
   if (colonIndex > 0 && colonIndex < 60) {
     return (
       <>
-        <strong>{text.substring(0, colonIndex + 1)}</strong>
-        {text.substring(colonIndex + 1)}
+        <strong className="text-foreground">{text.substring(0, colonIndex + 1)}</strong>
+        <span className="text-muted-foreground">{text.substring(colonIndex + 1)}</span>
       </>
     );
   }
 
-  // Fallback if no heading format is found
-  return <>{text}</>;
+  return <span className="text-muted-foreground">{text}</span>;
 }
+
+const ACCENT_COLORS = [
+  "#8B5CF6",
+  "#F472B6",
+  "#34D399",
+  "#FBBF24",
+  "#60A5FA",
+];
 
 export default function AiSummary({ countryId }: { countryId: string }) {
   const [summary, setSummary] = useState<string[]>([]);
@@ -38,7 +47,7 @@ export default function AiSummary({ countryId }: { countryId: string }) {
       try {
         const res = await fetch(`/api/countries/${countryId}/ai-summary`);
         const data = await res.json();
-        
+
         if (data.success && data.summary) {
           setSummary(data.summary);
         } else {
@@ -55,65 +64,95 @@ export default function AiSummary({ countryId }: { countryId: string }) {
   }, [countryId]);
 
   return (
-    <div className="bg-white border-2 border-foreground rounded-xl p-6 shadow-card relative overflow-hidden h-full flex flex-col">
-      <div className="absolute -top-4 -right-4 pointer-events-none">
-        <GeometricDecoration variant="dots" color="#F472B6" size={80} />
-      </div>
-      <div className="mb-4 shrink-0">
-        <h2 className="font-heading font-bold text-lg text-foreground uppercase tracking-wider flex items-center gap-2">
-          <span>AI Executive Summary</span>
-          <span className="text-[10px] bg-[#F472B6]/20 text-[#F472B6] px-2 py-0.5 rounded uppercase font-bold tracking-widest">
-            Beta
-          </span>
+    <div>
+      {/* Section header — matches Trend Chart header */}
+      <div className="flex items-center gap-3 mb-5">
+        <h2 className="font-heading font-bold text-lg text-foreground uppercase tracking-wider">
+          AI Insights
         </h2>
-        <div className="w-12 h-1 bg-border mt-2" />
+        <span className="text-[10px] bg-[#F472B6]/20 text-[#F472B6] px-2 py-0.5 rounded uppercase font-bold tracking-widest shrink-0">
+          Beta
+        </span>
+        <div className="flex-1 h-0.5 bg-border" />
       </div>
-      
-      <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar relative z-10">
-        {loading ? (
-          <div className="flex flex-col justify-center h-full">
-            <div className="animate-pulse flex flex-col gap-4 w-full mt-4">
-              <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-              <div className="h-4 bg-gray-200 rounded w-5/6"></div>
-              <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+
+      {/* Card */}
+      <div className="bg-white border-2 border-foreground rounded-xl p-6 shadow-card relative overflow-hidden">
+        {/* Decoration */}
+        <div className="absolute -top-4 -right-4 pointer-events-none">
+          <GeometricDecoration variant="dots" color="#F472B6" size={80} />
+        </div>
+
+        {/* Content */}
+        <div className="overflow-y-auto max-h-72 pr-1 custom-scrollbar relative z-10">
+          {loading ? (
+            <div className="animate-pulse flex flex-col gap-4 pt-2">
+              {[...Array(5)].map((_, i) => (
+                <div key={i} className="flex gap-3 items-start">
+                  <div className="h-5 w-6 bg-gray-200 rounded shrink-0" />
+                  <div className="flex-1 space-y-1.5">
+                    <div
+                      className="h-3.5 bg-gray-200 rounded"
+                      style={{ width: `${75 + (i % 3) * 8}%` }}
+                    />
+                    <div
+                      className="h-3.5 bg-gray-100 rounded"
+                      style={{ width: `${55 + (i % 4) * 8}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
             </div>
-          </div>
-        ) : summary.length > 0 ? (
-          <ul className="space-y-4 pb-2">
-            {summary.map((bullet, idx) => (
-              <li key={idx} className="flex gap-3 text-sm text-foreground font-body leading-relaxed">
-                <span className="text-[#8B5CF6] font-bold shrink-0 mt-0.5">{(idx + 1).toString().padStart(2, '0')}</span>
-                <span className="flex-1">{formatInsightText(bullet)}</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="h-full flex flex-col justify-center items-center text-center">
-            <p className="text-muted-foreground font-body text-sm mb-2">
-              AI insights are temporarily unavailable.
-            </p>
-            <p className="text-muted-foreground font-body text-sm">
-              Your economic analysis and scores are still available.
-            </p>
-          </div>
-        )}
+          ) : summary.length > 0 ? (
+            <ul className="space-y-4 pb-2 pt-1">
+              {summary.map((bullet, idx) => (
+                <li
+                  key={idx}
+                  className="flex gap-3 text-sm font-body leading-relaxed"
+                >
+                  {/* Index pill */}
+                  <span
+                    className="shrink-0 mt-0.5 w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
+                    style={{ backgroundColor: ACCENT_COLORS[idx % ACCENT_COLORS.length] }}
+                  >
+                    {idx + 1}
+                  </span>
+                  {/* Text */}
+                  <span className="flex-1 leading-relaxed">
+                    {formatInsightText(bullet)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <div className="h-full flex flex-col justify-center items-center text-center gap-2 py-8">
+              <span className="text-3xl">🤖</span>
+              <p className="text-muted-foreground font-body text-sm font-medium">
+                AI insights are temporarily unavailable.
+              </p>
+              <p className="text-muted-foreground font-body text-xs">
+                Your economic analysis and scores are still available below.
+              </p>
+            </div>
+          )}
+        </div>
+
+        <style dangerouslySetInnerHTML={{__html: `
+          .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+          }
+          .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+          }
+          .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #E2E8F0;
+            border-radius: 10px;
+          }
+          .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+            background-color: #CBD5E1;
+          }
+        `}} />
       </div>
-      
-      <style dangerouslySetInnerHTML={{__html: `
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 6px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: transparent;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background-color: #E2E8F0;
-          border-radius: 10px;
-        }
-        .custom-scrollbar:hover::-webkit-scrollbar-thumb {
-          background-color: #CBD5E1;
-        }
-      `}} />
     </div>
   );
 }

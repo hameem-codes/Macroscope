@@ -47,8 +47,7 @@ export default function Header({
         </button>
 
         <div className="hidden lg:flex items-center gap-2">
-          <span className="font-heading text-lg font-extrabold tracking-tight">ECONOMIC</span>
-          <span className="font-heading text-lg font-bold text-accent">/51</span>
+          <span className="font-heading text-lg font-extrabold tracking-tight">MACROSCOPE</span>
         </div>
       </div>
 

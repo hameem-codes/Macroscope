@@ -167,9 +167,9 @@ export default function OverviewPage() {
 
       {/* Trend Chart & AI Summary */}
       <section className="mb-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
           {/* Trend Chart */}
-          <div>
+          <div className="flex flex-col">
             <div className="flex items-center gap-3 mb-5">
               <h2 className="font-heading font-bold text-lg text-foreground uppercase tracking-wider">
                 Economy Trend
@@ -177,7 +177,7 @@ export default function OverviewPage() {
               <div className="flex-1 h-0.5 bg-border" />
             </div>
 
-            <div className="bg-white border-2 border-foreground rounded-xl p-6 shadow-card relative overflow-hidden h-full">
+            <div className="bg-white border-2 border-foreground rounded-xl p-6 shadow-card relative overflow-hidden">
               <div className="absolute -top-4 -right-4 pointer-events-none">
                 <GeometricDecoration variant="circle" color="#34D399" size={80} />
               </div>
@@ -198,7 +198,7 @@ export default function OverviewPage() {
           </div>
 
           {/* AI Summary */}
-          <div>
+          <div className="flex flex-col">
             <AiSummary countryId={healthData.countryCode} />
           </div>
         </div>
