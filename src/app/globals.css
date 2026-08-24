@@ -1,0 +1,162 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #FFFDF5;
+  --foreground: #1E293B;
+  --muted: #F1F5F9;
+  --muted-foreground: #64748B;
+  --accent: #8B5CF6;
+  --accent-foreground: #FFFFFF;
+  --secondary: #F472B6;
+  --tertiary: #FBBF24;
+  --quaternary: #34D399;
+  --border: #E2E8F0;
+  --card: #FFFFFF;
+  --input: #FFFFFF;
+  --ring: #8B5CF6;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Outfit', sans-serif;
+}
+
+/* Score bar animation */
+@keyframes scoreBarFill {
+  from { width: 0%; }
+}
+
+.score-bar-animated {
+  animation: scoreBarFill 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Barometer needle animation */
+@keyframes needleSwing {
+  from { transform: rotate(-90deg); }
+}
+
+/* Stagger animation for cards */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.3s; }
+.stagger-7 { animation-delay: 0.35s; }
+.stagger-8 { animation-delay: 0.4s; }
+
+/* Geometric decoration patterns */
+.geo-pattern-dots {
+  background-image: radial-gradient(circle, var(--accent) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.geo-pattern-lines {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(139, 92, 246, 0.05) 10px,
+    rgba(139, 92, 246, 0.05) 20px
+  );
+}
+
+/* Hard shadow utility */
+.shadow-hard {
+  box-shadow: 4px 4px 0 #1E293B;
+}
+
+.shadow-hard-lg {
+  box-shadow: 8px 8px 0 #1E293B;
+}
+
+/* Card hover effect */
+.card-interactive {
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.card-interactive:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 12px 12px 0 #E2E8F0;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--muted);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #CBD5E1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94A3B8;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus visible styles */
+*:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Number font for economic data */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Sidebar active state */
+.sidebar-link {
+  transition: all 0.15s ease;
+}
+
+.sidebar-link:hover {
+  background: rgba(139, 92, 246, 0.08);
+}
+
+.sidebar-link.active {
+  background: rgba(139, 92, 246, 0.12);
+  font-weight: 600;
+  color: var(--accent);
+}
+
+/* Search command styles */
+.search-overlay {
+  backdrop-filter: blur(8px);
+  background: rgba(30, 41, 59, 0.4);
+}
+
+/* Diagonal pattern */
+.diagonal-pattern {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent,
+    transparent 8px,
+    rgba(139, 92, 246, 0.03) 8px,
+    rgba(139, 92, 246, 0.03) 16px
+  );
+}
