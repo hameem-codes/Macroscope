@@ -43,9 +43,8 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
             <Link href="/" className="block" onClick={onClose}>
               <div className="font-heading">
                 <span className="text-lg font-extrabold tracking-tight text-foreground">
-                  ECONOMIC
+                  MACROSCOPE
                 </span>
-                <span className="text-lg font-bold text-accent ml-1">/51</span>
               </div>
               <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground mt-1">
                 Intelligence Dashboard

@@ -3,9 +3,9 @@ import { CountryProvider } from "@/context/CountryContext";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ECONOMIC / 51 — Intelligence Dashboard",
+  title: "MACROSCOPE — Intelligence Dashboard",
   description:
-    "Sophisticated economic intelligence platform tracking 51 indicators across 8 categories.",
+    "Macroscope: sophisticated economic intelligence platform tracking indicators across 8 categories.",
 };
 export default function RootLayout({
   children,
