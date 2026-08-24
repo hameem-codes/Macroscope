@@ -70,8 +70,11 @@ export default function Header({
 
         {countryOpen && (
           <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 bg-white border-2 border-foreground rounded-lg shadow-hard overflow-hidden z-50">
-            <div className="p-1">
-              {countries.map((country) => (
+            <div className="p-1 max-h-[50vh] overflow-y-auto custom-scrollbar">
+              <div className="px-3 py-2 text-[10px] font-bold text-muted-foreground uppercase tracking-widest border-b border-border/50 mb-1">
+                G20 Countries
+              </div>
+              {countries.sort((a, b) => a.name.localeCompare(b.name)).map((country) => (
                 <button
                   key={country.id}
                   onClick={() => {
@@ -94,6 +97,21 @@ export default function Header({
                 </button>
               ))}
             </div>
+            <style dangerouslySetInnerHTML={{__html: `
+              .custom-scrollbar::-webkit-scrollbar {
+                width: 6px;
+              }
+              .custom-scrollbar::-webkit-scrollbar-track {
+                background: transparent;
+              }
+              .custom-scrollbar::-webkit-scrollbar-thumb {
+                background-color: #E2E8F0;
+                border-radius: 10px;
+              }
+              .custom-scrollbar:hover::-webkit-scrollbar-thumb {
+                background-color: #CBD5E1;
+              }
+            `}} />
           </div>
         )}
       </div>

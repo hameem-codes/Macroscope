@@ -1,6 +1,7 @@
 import { getCountryData, getRawCountryData, WBIndicatorData } from "./worldBank";
 import { allProviderIndicators, Direction } from "./indicatorsMapping";
 import { Indicator } from "@/lib/types";
+import { getCountryById } from "@/data/countries";
 
 export function clampScore(score: number): number {
   return Math.max(0, Math.min(100, Math.round(score)));
@@ -24,8 +25,10 @@ export function normalizeValue(value: number, min: number, max: number, directio
   return clampScore(score);
 }
 
-export async function processCountryData(countryIso3Code: string): Promise<Indicator[]> {
-  const rawData = await getCountryData(countryIso3Code);
+export async function processCountryData(countryCode: string): Promise<Indicator[]> {
+  const country = getCountryById(countryCode);
+  const wbCode = country?.worldBankCode || countryCode;
+  const rawData = await getCountryData(wbCode);
   
   return rawData.map(({ mapping, currentObservation, previousObservation }) => {
     const currentValue = currentObservation.value ?? 0;
