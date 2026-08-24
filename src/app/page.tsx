@@ -13,6 +13,7 @@ import FilterControls, { filterIndicators, FilterState } from "@/components/filt
 import GeometricDecoration from "@/components/geometric/GeometricDecoration";
 import { categories } from "@/data/categories";
 import IndicatorDetailModal from "@/components/modals/IndicatorDetailModal";
+import AiSummary from "@/components/dashboard/AiSummary";
 import { Indicator } from "@/lib/types";
 
 export default function OverviewPage() {
@@ -148,32 +149,42 @@ export default function OverviewPage() {
         </div>
       </section>
 
-      {/* Trend Chart */}
+      {/* Trend Chart & AI Summary */}
       <section className="mb-10">
-        <div className="flex items-center gap-3 mb-5">
-          <h2 className="font-heading font-bold text-lg text-foreground uppercase tracking-wider">
-            Economy Trend
-          </h2>
-          <div className="flex-1 h-0.5 bg-border" />
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Trend Chart */}
+          <div>
+            <div className="flex items-center gap-3 mb-5">
+              <h2 className="font-heading font-bold text-lg text-foreground uppercase tracking-wider">
+                Economy Trend
+              </h2>
+              <div className="flex-1 h-0.5 bg-border" />
+            </div>
 
-        <div className="bg-white border-2 border-foreground rounded-xl p-6 shadow-card relative overflow-hidden">
-          <div className="absolute -top-4 -right-4 pointer-events-none">
-            <GeometricDecoration variant="circle" color="#34D399" size={80} />
-          </div>
+            <div className="bg-white border-2 border-foreground rounded-xl p-6 shadow-card relative overflow-hidden h-full">
+              <div className="absolute -top-4 -right-4 pointer-events-none">
+                <GeometricDecoration variant="circle" color="#34D399" size={80} />
+              </div>
 
-          <div className="flex flex-wrap items-center gap-6 mb-6">
-            <div>
-              <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-heading font-bold">
-                Current
-              </p>
-              <p className="font-heading text-2xl font-extrabold text-foreground tabular-nums">
-                {healthData.economyHealthScore}
-              </p>
+              <div className="flex flex-wrap items-center gap-6 mb-6">
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-heading font-bold">
+                    Current
+                  </p>
+                  <p className="font-heading text-2xl font-extrabold text-foreground tabular-nums">
+                    {healthData.economyHealthScore}
+                  </p>
+                </div>
+              </div>
+
+              <TrendChart data={healthData.historicalScores || []} color="#8B5CF6" />
             </div>
           </div>
 
-          <TrendChart data={healthData.historicalScores || []} color="#8B5CF6" />
+          {/* AI Summary */}
+          <div>
+            <AiSummary countryId={healthData.countryCode} />
+          </div>
         </div>
       </section>
 
