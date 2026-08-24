@@ -1,20 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useCountry } from "@/context/CountryContext";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import Shell from "@/components/layout/Shell";
 import ScoreBadge from "@/components/cards/ScoreBadge";
 import IndicatorCard from "@/components/cards/IndicatorCard";
 import TrendChart from "@/components/charts/TrendChart";
 import FilterControls, { filterIndicators, FilterState } from "@/components/filters/FilterControls";
 import GeometricDecoration from "@/components/geometric/GeometricDecoration";
-import { getCategoryBySlug, categories } from "@/data/categories";
+import { getCategoryBySlug } from "@/data/categories";
 import { getCountryById } from "@/data/countries";
-import { getCountryHealthData } from "@/lib/calculations";
-import { getIndicatorsForCountry } from "@/data/indicators";
-import { getScoreColor, getScoreRange } from "@/lib/types";
 import IndicatorDetailModal from "@/components/modals/IndicatorDetailModal";
+import { Indicator } from "@/lib/types";
 
 export default function CategoryDetailPage() {
   const params = useParams();
@@ -27,30 +26,46 @@ export default function CategoryDetailPage() {
     sortBy: "score-desc",
   });
   const [selectedIndicator, setSelectedIndicator] = useState<string | null>(null);
+  
+  const [loading, setLoading] = useState(true);
+  const [healthData, setHealthData] = useState<any>(null);
+
+  useEffect(() => {
+    let active = true;
+    const controller = new AbortController();
+
+    async function fetchData() {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/countries/${countryId}/overview`, {
+          signal: controller.signal
+        });
+        const data = await res.json();
+        if (active) {
+          setHealthData(data);
+        }
+      } catch (err) {
+        if ((err as any).name !== "AbortError") {
+          console.error("Failed to fetch country category data", err);
+        }
+      } finally {
+        if (active) {
+          setLoading(false);
+        }
+      }
+    }
+
+    if (countryId) {
+      fetchData();
+    }
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [countryId]);
 
   const category = getCategoryBySlug(slug);
-  const allIndicators = getIndicatorsForCountry(countryId);
-  const categoryIndicators = allIndicators.filter((i) => i.categorySlug === slug);
-  const healthData = getCountryHealthData(countryId);
-  const catScore = healthData.categoryScores.find((c) => c.categorySlug === slug);
-  const country = getCountryById(countryId);
-
-  // Generate mock historical data for the category
-  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  const baseScore = catScore?.score || 50;
-  const historicalScores = months.map((month, i) => ({
-    month,
-    score: Math.max(0, Math.min(100, Math.round(baseScore - 8 + Math.sin(i * 0.8) * 6 + i * 0.5))),
-  }));
-
-  const filteredIndicators = filterIndicators(
-    categoryIndicators,
-    { ...filters, category: slug }
-  );
-
-  const selectedInd = selectedIndicator
-    ? categoryIndicators.find((i) => i.id === selectedIndicator)
-    : null;
 
   if (!category) {
     return (
@@ -64,6 +79,34 @@ export default function CategoryDetailPage() {
       </Shell>
     );
   }
+
+  if (loading || !healthData) {
+    return (
+      <Shell>
+        <div className="flex flex-col items-center justify-center min-h-[50vh]">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-foreground mb-4"></div>
+          <p className="font-heading font-bold text-xl text-foreground">
+            Loading category indicators...
+          </p>
+        </div>
+      </Shell>
+    );
+  }
+
+  const allIndicators: Indicator[] = healthData.indicators || [];
+  const categoryIndicators = allIndicators.filter((i: Indicator) => i.categorySlug === slug);
+  const catScore = healthData.categoryScores.find((c: any) => c.categorySlug === slug);
+  const country = getCountryById(countryId);
+  const historicalScores = healthData.historicalCategoryScores?.[slug] || [];
+
+  const filteredIndicators = filterIndicators(
+    categoryIndicators,
+    { ...filters, category: slug }
+  );
+
+  const selectedInd = selectedIndicator
+    ? categoryIndicators.find((i: any) => i.id === selectedIndicator)
+    : null;
 
   return (
     <Shell>
@@ -79,7 +122,7 @@ export default function CategoryDetailPage() {
 
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-xs text-muted-foreground font-body mb-6" aria-label="Breadcrumb">
-          <a href="/" className="hover:text-foreground transition-colors">Overview</a>
+          <Link href="/" className="hover:text-foreground transition-colors">Overview</Link>
           <span>/</span>
           <span className="text-foreground font-medium">{category.name}</span>
         </nav>
@@ -129,14 +172,16 @@ export default function CategoryDetailPage() {
       </section>
 
       {/* Historical Trend */}
-      <section className="mb-8">
-        <h2 className="font-heading font-bold text-sm uppercase tracking-wider text-foreground mb-4">
-          Score History
-        </h2>
-        <div className="bg-white border-2 border-foreground rounded-xl p-6 shadow-card">
-          <TrendChart data={historicalScores} color={category.color} label={`${category.name} Score Trend`} />
-        </div>
-      </section>
+      {historicalScores.length > 0 && (
+        <section className="mb-8">
+          <h2 className="font-heading font-bold text-sm uppercase tracking-wider text-foreground mb-4">
+            Score History
+          </h2>
+          <div className="bg-white border-2 border-foreground rounded-xl p-6 shadow-card">
+            <TrendChart data={historicalScores} color={category.color} label={`${category.name} Score Trend`} />
+          </div>
+        </section>
+      )}
 
       {/* Indicators */}
       <section className="mb-8">

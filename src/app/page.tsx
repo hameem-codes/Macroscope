@@ -29,22 +29,38 @@ export default function OverviewPage() {
   const [healthData, setHealthData] = useState<any>(null);
 
   useEffect(() => {
+    let active = true;
+    const controller = new AbortController();
+
     async function fetchData() {
       setLoading(true);
       try {
-        const res = await fetch(`/api/countries/${countryId}/overview`);
+        const res = await fetch(`/api/countries/${countryId}/overview`, {
+          signal: controller.signal
+        });
         const data = await res.json();
-        setHealthData(data);
+        if (active) {
+          setHealthData(data);
+        }
       } catch (err) {
-        console.error("Failed to fetch country data", err);
+        if ((err as any).name !== "AbortError") {
+          console.error("Failed to fetch country data", err);
+        }
       } finally {
-        setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     }
     
     if (countryId) {
       fetchData();
     }
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
   }, [countryId]);
 
   if (loading || !healthData) {

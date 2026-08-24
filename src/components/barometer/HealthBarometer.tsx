@@ -17,7 +17,7 @@ export default function HealthBarometer({
   size = 320,
 }: HealthBarometerProps) {
   const [displayScore, setDisplayScore] = useState(0);
-  const [needleRotation, setNeedleRotation] = useState(-90);
+  const [needleRotation, setNeedleRotation] = useState(0);
   const animRef = useRef<number>();
   const prefersReduced = useRef(false);
 
@@ -30,9 +30,13 @@ export default function HealthBarometer({
 
     if (prefersReduced.current) {
       setDisplayScore(score);
-      setNeedleRotation(-90 + (score / 100) * 180);
+      setNeedleRotation((score / 100) * 180);
       return;
     }
+
+    // Reset displays to 0 immediately when country or score changes
+    setDisplayScore(0);
+    setNeedleRotation(0);
 
     const startTime = performance.now();
     const duration = 1500;
@@ -43,7 +47,7 @@ export default function HealthBarometer({
       // Cubic bezier approx
       const eased = 1 - Math.pow(1 - progress, 3);
       setDisplayScore(Math.round(eased * score));
-      setNeedleRotation(-90 + eased * (score / 100) * 180);
+      setNeedleRotation(eased * (score / 100) * 180);
       if (progress < 1) {
         animRef.current = requestAnimationFrame(animate);
       }
@@ -52,7 +56,7 @@ export default function HealthBarometer({
     return () => {
       if (animRef.current) cancelAnimationFrame(animRef.current);
     };
-  }, [score]);
+  }, [score, countryName]);
 
   const r = (size - 40) / 2;
   const cx = size / 2;
@@ -155,7 +159,6 @@ export default function HealthBarometer({
         {/* Needle */}
         <g
           transform={`rotate(${needleRotation}, ${cx}, ${cy})`}
-          style={{ transformOrigin: `${cx}px ${cy}px` }}
         >
           <line
             x1={cx}
@@ -173,38 +176,13 @@ export default function HealthBarometer({
         {/* Center score */}
         <text
           x={cx}
-          y={cy - 16}
+          y={cy + 32}
           textAnchor="middle"
+          dominantBaseline="central"
           className="fill-foreground font-heading"
           style={{ fontSize: "42px", fontWeight: 800 }}
         >
           {displayScore}
-        </text>
-        <text
-          x={cx}
-          y={cy + 6}
-          textAnchor="middle"
-          className="fill-muted-foreground text-xs font-body font-medium"
-        >
-          / 100
-        </text>
-
-        {/* Scale labels */}
-        <text
-          x={cx - r - 20}
-          y={cy + 4}
-          textAnchor="middle"
-          className="fill-muted-foreground text-[9px] font-body"
-        >
-          0
-        </text>
-        <text
-          x={cx + r + 20}
-          y={cy + 4}
-          textAnchor="middle"
-          className="fill-muted-foreground text-[9px] font-body"
-        >
-          100
         </text>
       </svg>
 
