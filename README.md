@@ -1,398 +1,300 @@
-# Macroscope
+# 🔭 Macroscope
 
-### Economic Intelligence, Structured for Decisions.
+### **A clearer lens on economic health.**
 
-**Macroscope** is an economic intelligence dashboard designed to turn complex macroeconomic data into a clear, comparable view of economic health.
+Macroscope turns a sea of economic numbers into something you can actually *read*.
 
-It brings together country-level indicators, standardized scoring, category-level analysis, historical trends, and AI-generated executive summaries into a single analytical interface.
+Instead of looking at GDP, inflation, employment, trade, and financial indicators in isolation, Macroscope connects them into a **multidimensional picture of how an economy is performing.**
 
-> **Explore the live application:** [macroscope-alpha.vercel.app](https://macroscope-alpha.vercel.app/)
-
----
-
-## Why Macroscope?
-
-Macroeconomic information is abundant, but transforming raw indicators into something decision-ready is the difficult part.
-
-Macroscope approaches that problem as an analytical pipeline:
-
-**Raw economic data → standardized indicators → category scores → economy health score → trends & interpretation**
-
-Rather than presenting isolated statistics, the platform provides a structured framework for understanding how multiple economic dimensions contribute to an overall picture of economic health.
+**Raw data → meaningful signals → economic dimensions → one bigger picture.**
 
 ---
 
-## What It Does
+## 🌍 Look Beyond the Numbers
 
-### 🌍 Country Economic Intelligence
+An economy is never just *one* number.
 
-Select a country and examine its economic condition across a broad set of macroeconomic indicators.
+Macroscope brings together indicators across:
 
-The dashboard currently works with World Bank indicators covering areas such as:
+`Labor` · `Consumption` · `Prices` · `Finance` · `Production` · `Growth` · `Trade` · `Markets`
 
-* Labor & Income
-* Consumer Activity
-* Prices & Stability
-* Policy & Financial
-* Production & Business
-* Housing & Wealth
-* Growth & Global Flows
-* Sentiment & Valuation
+Each indicator is interpreted according to its economic meaning, normalized onto a common scale, and incorporated into a broader analytical framework.
 
-The indicator framework is defined centrally through a provider mapping layer, making it easier to extend the system with additional data sources and metrics.
+The result?
+
+### **An Economy Health Score**
+
+A single, intuitive signal that provides the *big picture* — while still allowing users to explore the economic factors behind it.
 
 ---
 
-### 📊 Economy Health Score
+## 🧠 How It Thinks
 
-Macroscope converts individual indicators into normalized **0–100 scores** using configurable ranges and directionality.
-
-Depending on the metric, the scoring model can treat:
-
-* Higher values as better
-* Lower values as better
-* Mid-range values as preferable
-
-Category scores are then calculated from their constituent indicators, followed by an overall **Economy Health Score**.
-
-This creates a common analytical scale across fundamentally different economic measures.
-
----
-
-### 📈 Historical Trend Analysis
-
-The platform calculates historical economy-health scores across multiple years, allowing users to see whether an economy is improving, weakening, or remaining relatively stable over time.
-
-Category-level historical scores are also generated, making it possible to identify which dimensions of an economy are driving broader changes.
-
----
-
-### 🔎 Indicator-Level Exploration
-
-Macroscope does not stop at the headline score.
-
-Users can inspect individual indicators, compare their current and previous observations, identify trends, filter metrics, and explore the underlying economic categories.
-
-The interface also surfaces **top improving and deteriorating indicators**, helping users move quickly from an overall signal to the metrics behind it.
-
----
-
-### 🤖 AI Executive Summary
-
-Macroscope includes an AI-powered interpretation layer built with the Groq SDK.
-
-Instead of asking an LLM to independently research the economy, the system provides it with the structured economic data already calculated by the application and instructs it to produce a concise three-part executive summary:
-
-1. Overall economic condition
-2. Most important positive or negative driver
-3. Most important trend, risk, or opportunity
-
-The prompt explicitly constrains the model from inventing statistics, changing numerical values, introducing unsupported external facts, or treating correlation as causation.
-
-This makes the AI layer an **interpretation interface over structured data**, rather than the underlying source of truth.
-
----
-
-## Data & Analytical Architecture
-
-At a high level, Macroscope follows this flow:
+Macroscope works through a layered scoring process:
 
 ```text
-World Bank API
-      │
-      ▼
-Country & Indicator Data
-      │
-      ▼
-Indicator Mapping
-      │
-      ▼
-Normalization & Directionality
-      │
-      ▼
-Indicator Scores (0–100)
-      │
-      ▼
+Economic Data
+      ↓
+Indicator Interpretation
+      ↓
+Normalization
+      ↓
+Indicator Scores
+      ↓
 Category Scores
-      │
-      ▼
+      ↓
 Economy Health Score
-      │
-      ├── Historical Trends
-      ├── Top Movers
-      ├── Indicator Analysis
-      └── AI Executive Summary
 ```
 
-The application retrieves country and indicator data through the World Bank API and caches country metadata for a day and indicator requests for roughly an hour.
+The objective isn't simply to calculate an average.
+
+It's to transform fundamentally different economic measurements into **comparable signals** before combining them.
 
 ---
 
-## Technology Stack
+# 📐 Country Health Score — Methodology
 
-| Layer         | Technology     |
-| ------------- | -------------- |
-| Framework     | Next.js 14     |
-| Language      | TypeScript     |
-| UI            | React 18       |
-| Styling       | Tailwind CSS   |
-| Visualization | Recharts       |
-| Icons         | Lucide React   |
-| Economic Data | World Bank API |
-| AI Layer      | Groq SDK       |
-| Deployment    | Vercel         |
+The **Economy Health Score** is calculated through a three-stage aggregation process:
 
-The current dependency stack is defined in the project's `package.json`.
+**Indicator → Category → Overall Economy**
+
+### 1. Normalize Each Indicator
+
+Every indicator has:
+
+* A minimum reference value (L)
+* A maximum reference value (U)
+* A direction of preference
+* Its observed value (x)
+
+The resulting score is constrained to a **0–100 scale**.
+
+### Higher is Better
+
+For indicators where higher values represent stronger economic conditions:
+
+[
+S_i =
+100 \times
+\frac{x_i-L_i}{U_i-L_i}
+]
+
+### Lower is Better
+
+For indicators where lower values represent stronger conditions:
+
+[
+S_i =
+100 \times
+\frac{U_i-x_i}{U_i-L_i}
+]
+
+### Neutral Indicators
+
+Some indicators are not inherently better when they continuously increase or decrease.
+
+For these, Macroscope rewards values closer to the midpoint:
+
+[
+M_i = \frac{L_i+U_i}{2}
+]
+
+[
+R_i = \frac{U_i-L_i}{2}
+]
+
+[
+S_i =
+100 \times
+\left(
+1-\frac{|x_i-M_i|}{R_i}
+\right)
+]
+
+This means the score is highest near the preferred midpoint and decreases as the observation moves away from it.
+
+Finally:
+
+[
+S_i = \max(0,\min(100,S_i))
+]
+
+So every indicator ultimately contributes a value between **0 and 100**.
 
 ---
 
-## Project Structure
+## 2. Calculate Economic Category Scores
 
-```text
-Macroscope/
-├── src/
-│   ├── app/
-│   │   ├── api/
-│   │   │   ├── countries/
-│   │   │   └── services/
-│   │   ├── category/
-│   │   ├── compare/
-│   │   ├── global/
-│   │   ├── layout.tsx
-│   │   └── page.tsx
-│   │
-│   ├── components/
-│   │   ├── barometer/
-│   │   ├── cards/
-│   │   ├── charts/
-│   │   ├── dashboard/
-│   │   ├── filters/
-│   │   ├── layout/
-│   │   └── modals/
-│   │
-│   ├── context/
-│   ├── data/
-│   └── lib/
-│
-├── .env.example
-├── next.config.js
-├── package.json
-├── postcss.config.js
-└── tailwind.config.js
-```
+Indicators are grouped into broader economic categories.
 
-The backend is organized around country-specific API routes and reusable services for data retrieval, indicator mapping, scoring, and AI generation.
+For category (c), containing (n_c) indicators:
 
----
+[
+C_c =
+\frac{1}{n_c}
+\sum_{i=1}^{n_c} S_i
+]
 
-## Scoring Methodology
-
-Macroscope uses configurable normalization rather than comparing raw values directly.
-
-For a **higher-is-better** indicator:
-
-```text
-Score = ((Value - Min) / (Max - Min)) × 100
-```
-
-For a **lower-is-better** indicator:
-
-```text
-Score = ((Max - Value) / (Max - Min)) × 100
-```
-
-For a **neutral** indicator, the score rewards proximity to the midpoint of the configured range.
-
-Scores are constrained to the **0–100** range before being aggregated.
-
-### Why normalize?
-
-Economic indicators operate on radically different scales and units.
+Each category therefore receives its own **0–100 score**.
 
 For example:
 
-* unemployment is measured in %
-* market capitalization can be expressed as % of GDP
-* GDP growth is a yearly growth rate
-* real interest rates can be positive or negative
+```text
+Labor & Income       → 78
+Consumer Activity    → 71
+Prices & Stability   → 64
+Production           → 82
+Growth & Trade       → 76
+```
 
-Normalization creates a shared analytical language that allows these metrics to contribute to a common framework.
+This allows individual indicators to contribute to a broader economic dimension rather than directly dominating the final score.
 
 ---
 
-## API Capabilities
+## 3. Calculate the Economy Health Score
 
-The application exposes backend routes for:
+Once all category scores are calculated, Macroscope takes their arithmetic mean.
+
+For (k) economic categories:
+
+[
+\boxed{
+EHS =
+\frac{1}{k}
+\sum_{c=1}^{k} C_c
+}
+]
+
+The final result is again constrained to the **0–100 range**.
+
+In other words:
 
 ```text
-GET /api/countries
-GET /api/countries/compare
-GET /api/countries/{countryCode}/overview
-GET /api/countries/{countryCode}/metrics
-GET /api/countries/{countryCode}/ai-summary
-GET /api/countries/{countryCode}/correlations
-```
-
-These endpoints support country discovery, country analysis, comparison workflows, metric retrieval, AI summaries, and analytical extensions.
-
----
-
-## Getting Started
-
-### 1. Clone the repository
-
-```bash
-git clone https://github.com/hameem-codes/Macroscope.git
-cd Macroscope
-```
-
-### 2. Install dependencies
-
-```bash
-npm install
-```
-
-### 3. Configure environment variables
-
-Create a `.env.local` file based on `.env.example`.
-
-```env
-GROQ_API_KEY=your_groq_api_key
-GROQ_MODEL=openai/gpt-oss-20b
-```
-
-The AI summary service reads the Groq credentials from environment variables and falls back gracefully when the API key is unavailable.
-
-### 4. Start the development server
-
-```bash
-npm run dev
-```
-
-Open:
-
-```text
-http://localhost:3000
-```
-
-### 5. Production build
-
-```bash
-npm run build
-npm start
-```
-
----
-
-## Available Scripts
-
-```bash
-npm run dev        # Start development server
-npm run build      # Create production build
-npm start          # Start production server
-npm run typecheck  # Run TypeScript checks
-npm run lint       # Run linting
-```
-
----
-
-## Analytical Principles
-
-Macroscope is built around a few important principles:
-
-### Data first
-
-The application treats structured economic observations as the foundation of the analysis. The AI layer operates on application-generated economic data rather than replacing it.
-
-### Comparable signals
-
-Normalization allows heterogeneous indicators to be interpreted on a common 0–100 scale.
-
-### Multi-dimensional analysis
-
-A single economic metric rarely tells the full story. Macroscope therefore groups indicators into broader economic dimensions before generating an overall health score.
-
-### Explainable aggregation
-
-The overall score can be traced back through:
-
-```text
-Economy Health Score
-        ↓
-Category Scores
-        ↓
 Indicator Scores
-        ↓
-Underlying Data
+       ↓
+Average within each category
+       ↓
+Category Scores
+       ↓
+Average across categories
+       ↓
+╔══════════════════════╗
+║  ECONOMY HEALTH SCORE ║
+╚══════════════════════╝
 ```
 
-This structure helps users understand **why** a score looks the way it does instead of treating the headline number as a black box.
+This two-level aggregation prevents a category containing many indicators from automatically dominating the overall score simply because it has more metrics.
 
 ---
 
-## Current Limitations
+## 📊 What the Score Actually Means
 
-Macroscope is an evolving analytical platform, and some functionality is intentionally still at MVP/scaffold stage.
+The Economy Health Score is best understood as a **composite analytical signal**, not a conventional economic statistic.
 
-Most notably, the current correlations endpoint contains a placeholder implementation and does **not yet calculate correlations from a complete historical series**. The endpoint currently returns a simulated coefficient and includes a correlation-versus-causation disclaimer.
+A score of 80 does not mean that an economy is "80% healthy."
 
-The scoring framework is also dependent on configured indicator ranges, meaning the quality of the resulting score depends partly on how those ranges and directionality assumptions are defined.
+Instead, it means that the country's measured indicators, relative to their defined reference ranges and economic directions, collectively produce a stronger normalized position within Macroscope's analytical framework.
 
-These limitations are useful areas for future methodological refinement.
+That distinction matters.
 
----
-
-## Roadmap
-
-Potential next steps include:
-
-* Expand beyond the current World Bank indicator set
-* Add additional providers such as IMF and OECD
-* Introduce richer historical time-series analysis
-* Replace the correlation scaffold with true historical correlation calculations
-* Add statistical significance and confidence information
-* Improve cross-country benchmarking
-* Introduce configurable scoring methodologies
-* Add data provenance and methodology views
-* Support downloadable analytical reports
-* Add more advanced forecasting and scenario analysis
+**The score summarizes the data — it does not replace the data.**
 
 ---
 
-## Vision
+## ⏳ Historical Health
 
-Macroscope is built around a simple idea:
+Macroscope applies the same scoring framework to historical observations.
 
-> **Economic data becomes more valuable when it becomes easier to interpret.**
+For each historical year:
 
-The long-term goal is to evolve from a dashboard of indicators into a broader **economic intelligence platform** where data retrieval, statistical analysis, contextual interpretation, and decision support work together in one system.
+[
+x_{i,t}
+\rightarrow
+S_{i,t}
+\rightarrow
+C_{c,t}
+\rightarrow
+EHS_t
+]
+
+This produces a time series of economy-health scores that can be used to observe changes in economic conditions over time.
+
+The result makes it possible to distinguish between:
+
+**Where an economy is**
+and
+**how its position has changed.**
 
 ---
 
-## Live Demo
+## 🔎 From Score to Explanation
 
-**Web App:**
-https://macroscope-alpha.vercel.app/
+The overall score is only the starting point.
 
-**Repository:**
-https://github.com/hameem-codes/Macroscope
+Macroscope lets users move down through the analytical hierarchy:
+
+**Economy Health**
+↓
+**Economic Categories**
+↓
+**Individual Indicators**
+↓
+**Underlying Economic Observations**
+
+This makes the score more interpretable and helps identify the economic signals contributing to changes in overall health.
 
 ---
 
-## Author
+# 🎯 Why This Approach?
 
-Built by **Hameem**.
+Economic indicators operate on completely different scales.
+
+GDP growth, unemployment, inflation, trade, interest rates, and market capitalization cannot meaningfully be combined using their raw values.
+
+Macroscope solves this through:
+
+**Normalization** → makes different indicators comparable.
+
+**Directionality** → accounts for whether higher, lower, or middle-range values are preferable.
+
+**Categorization** → groups related signals into meaningful economic dimensions.
+
+**Aggregation** → converts those dimensions into a single interpretable health signal.
+
+The philosophy is simple:
+
+> **Don't simplify the economy. Simplify the way we see it.**
+
+---
+
+## ⚙️ Built With
+
+**Next.js** · **React** · **TypeScript**
+**Tailwind CSS** · **Recharts** · **Lucide React**
+**World Bank Open Data** · **Vercel**
+
+A modern web stack, structured economic data, custom mathematical scoring, and interactive visualization working together as one analytical system.
+
+---
+
+## 🚀 Explore Macroscope
+
+**Live:** [macroscope-alpha.vercel.app](https://macroscope-alpha.vercel.app/)
+
+**Code:** [github.com/hameem-codes/Macroscope](https://github.com/hameem-codes/Macroscope)
+
+---
+
+## 👤 Author
+
+**Hameem**
 
 [GitHub](https://github.com/hameem-codes)
 
 ---
 
-## License
-
-This project currently does not specify a repository license.
-
----
-
 <p align="center">
-  <sub>Macroscope — turning macroeconomic data into structured intelligence.</sub>
+  <strong>Macroscope 🔭</strong><br>
+  <sub>See the bigger economic picture.</sub>
 </p>
+
